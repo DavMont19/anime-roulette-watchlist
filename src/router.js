@@ -8,10 +8,6 @@ const routes = [
     name: 'home',
     component: HomePage,
   },
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/',
-  },
 ]
 
 const router = createRouter({

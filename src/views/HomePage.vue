@@ -1,7 +1,34 @@
 <script setup>
+import { computed } from 'vue'
 import AnimeCard from '@/components/AnimeCard.vue'
+import { useAnimeRoulette } from '@/composables/useAnimeRoulette'
+import WatchList from '@/components/WatchList.vue'
 
-const spin = () => alert('Hello')
+const {
+  anime,
+  loading,
+  error,
+  spin,
+  cooldownLeft,
+  addToWatchlist,
+  watchlist,
+  isInWatchlist,
+  removeFromWatchlist,
+} = useAnimeRoulette()
+
+const spinDisabled = computed(() => loading.value || cooldownLeft.value > 0)
+
+const spinLabel = computed(() => {
+  if (loading.value) {
+    return 'Spinning...'
+  }
+
+  if (cooldownLeft.value > 0) {
+    return `Cooldown ${cooldownLeft.value}s`
+  }
+
+  return 'SPIN 🎰'
+})
 </script>
 
 <template>
@@ -13,7 +40,7 @@ const spin = () => alert('Hello')
         <p class="text-xs font-semibold tracking-[0.3em] text-cyan-300/90 uppercase">Project #4</p>
         <h1 class="mt-2 text-4xl font-black text-white sm:text-5xl">Anime Roulette Machine</h1>
         <p class="mt-2 max-w-3xl text-sm text-slate-300 sm:text-base">
-          Spin the wheel, request a random anime from tenrai with VueUse useFetch, and learnhow REST
+          Spin the reel, request a random anime from Tenrai with VueUse useFech, and learnhow REST
           APIs signal rate limiting with HTTP 429.
         </p>
       </header>
@@ -32,15 +59,32 @@ const spin = () => alert('Hello')
               </div>
               <button
                 type="button"
+                :disabled="spinDisabled"
                 class="cursor-pointer rounded-full border border-cyan-300/70 bg-cyan-400/20 px-6 py-3 text-base font-black tracking-wide text-cyan-100 hover:bg-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-60"
                 @click="spin"
               >
-                Spin
+                {{ spinLabel }}
               </button>
             </div>
+            <p
+              v-if="cooldownLeft > 0"
+              class="mt-4 rounded-xl border border-amber-300/50 bg-amber-400/10 px-3 py-2 text-sm font-semibold text-amber-100"
+            >
+              Rate-limited. Try again in {{ cooldownLeft }}s.
+            </p>
           </div>
-          <AnimeCard loading />
+          <AnimeCard
+            :loading="loading"
+            :error="error"
+            :anime="anime"
+            :in-watchlist="Boolean(anime && isInWatchlist(anime.mal_id))"
+            @add="addToWatchlist"
+          />
         </section>
+        <WatchList
+          :items="watchlist"
+          @remove="removeFromWatchlist"
+        />
       </div>
     </div>
   </main>
